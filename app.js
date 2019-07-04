@@ -117,6 +117,27 @@ var budgetController = (function(){
 })();
 
 var uiController = (function(){
+    var formatNumber = function(num, type) {
+        num = Math.abs(num);
+
+        num = num.toFixed(2);
+
+        var numSplit = num.split(".");
+        var int = numSplit[0];
+
+        if(int.length > 3) {
+            int = int.substr(0, int.length - 3) + "," + int.substr(int.length - 3, 3);
+        }
+
+        var dec = numSplit[1];
+
+        var sign = "";
+
+        type == "exp" ? sign = "-" : sign = "+";
+
+        return sign + " " + int + "." + dec;
+    };
+
     return {
         getInput: function(){
             var type = document.querySelector(".add__type").value;
@@ -141,7 +162,7 @@ var uiController = (function(){
                 html = '<div class="item clearfix" id="exp-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__percentage">21%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
             }
 
-            var newHtml = html.replace("%id%", obj.id).replace("%description%", obj.description).replace("%value%", obj.value);
+            var newHtml = html.replace("%id%", obj.id).replace("%description%", obj.description).replace("%value%", formatNumber(obj.value, type));
 
             document.querySelector("." + selector).insertAdjacentHTML("beforeend", newHtml);
         },
@@ -162,9 +183,9 @@ var uiController = (function(){
             fieldsArray[0].focus();
         },
         displayBudget: function(obj){
-            document.querySelector(".budget__value").innerHTML = obj.budget;
-            document.querySelector(".budget__income--value").innerHTML = obj.totalInc;
-            document.querySelector(".budget__expenses--value").innerHTML = obj.totalExp;
+            document.querySelector(".budget__value").innerHTML = formatNumber(obj.budget, obj.budget > 0 ? "inc" : "exp");
+            document.querySelector(".budget__income--value").innerHTML = formatNumber(obj.totalInc, "inc");
+            document.querySelector(".budget__expenses--value").innerHTML = formatNumber(obj.totalExp, "exp");
 
             if(obj.percentage > 0) {
                 document.querySelector(".budget__expenses--percentage").innerHTML = obj.percentage + "%";
