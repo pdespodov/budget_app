@@ -3,6 +3,19 @@ var budgetController = (function(){
         this.id = id;
         this.description = description;
         this.value = value;
+        this.percentage = -1;
+    };
+
+    Expense.prototype.calcPercentage = function(totalIncome) {
+        if(totalIncome > 0){
+            this.percentage = Math.round((this.value / totalIncome) * 100);
+        } else {
+            this.percentage = -1;
+        }
+    };
+
+    Expense.prototype.getPercentage = function(){
+        return this.percentage;
     };
 
     var Income = function(id, description, value) {
@@ -89,6 +102,16 @@ var budgetController = (function(){
                 totalExp: data.totals.exp,
                 percentage: data.percentage
             };
+        },
+        calculatePercentages: function(){
+            data.allItems["exp"].forEach(function(cur){
+                cur.calcPercentage(data.totals["inc"]);
+            });
+        },
+        getPercentages: function(){
+            return data.allItems["exp"].map(function(cur){
+                return cur.getPercentage();
+            });
         }
     }
 })();
@@ -148,6 +171,20 @@ var uiController = (function(){
             } else {
                 document.querySelector(".budget__expenses--percentage").innerHTML = "---";
             }
+        },
+        displayPercentages: function(percentages){
+            var fields = document.querySelectorAll(".item__percentage");
+
+            var nodeListForEach = function(list, callback){
+                for(var i = 0; i < list.length; i ++){
+                    callback(list[i], i);
+                }
+            };
+
+            nodeListForEach(fields, function(current, index){
+                current.innerHTML = percentages[index] > 0 ? percentages[index] + "%"
+                    : "---";
+            });
         }
     }
 })();
@@ -187,6 +224,8 @@ var controller = (function(budgetCtrl, uiCtrl){
         uiCtrl.clearFields();
 
         updateBudget();
+
+        updatePercentages();
     };
 
     var ctrlDeleteItem = function(event) {
@@ -204,7 +243,17 @@ var controller = (function(budgetCtrl, uiCtrl){
             uiCtrl.deleteListItem(itemId);
 
             updateBudget();
+
+            updatePercentages();
         }
+    };
+
+    var updatePercentages = function(){
+        budgetCtrl.calculatePercentages();
+
+        var percentages = budgetCtrl.getPercentages();
+
+        uiCtrl.displayPercentages(percentages);
     };
 
     return {
