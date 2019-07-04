@@ -59,6 +59,17 @@ var budgetController = (function(){
 
             return newItem;
         },
+        deleteItem: function(type, id) {
+            var ids = data.allItems[type].map(function(current){
+                return current.id;
+            });
+
+            var index = ids.indexOf(id);
+
+            if(index > -1) {
+                data.allItems[type].splice(index, 1);
+            }
+        },
         calculateBudget: function(){
             calculateTotal("exp");
             calculateTotal("inc");
@@ -101,15 +112,20 @@ var uiController = (function(){
 
             if(type === "inc") {
                 selector = "income__list";
-                html = '<div class="item clearfix" id="income-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
+                html = '<div class="item clearfix" id="inc-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
             } else {
                 selector = "expenses__list";
-                html = '<div class="item clearfix" id="expense-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__percentage">21%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
+                html = '<div class="item clearfix" id="exp-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__percentage">21%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
             }
 
             var newHtml = html.replace("%id%", obj.id).replace("%description%", obj.description).replace("%value%", obj.value);
 
             document.querySelector("." + selector).insertAdjacentHTML("beforeend", newHtml);
+        },
+        deleteListItem: function(selectorId) {
+            var element = document.getElementById(selectorId);
+
+            element.parentNode.removeChild(element);
         },
         clearFields: function() {
             var fields = document.querySelectorAll(".add__description, .add__value");
@@ -123,10 +139,6 @@ var uiController = (function(){
             fieldsArray[0].focus();
         },
         displayBudget: function(obj){
-            //.budget__value
-            //.budget__income--value
-            //.budget__expenses--value
-
             document.querySelector(".budget__value").innerHTML = obj.budget;
             document.querySelector(".budget__income--value").innerHTML = obj.totalInc;
             document.querySelector(".budget__expenses--value").innerHTML = obj.totalExp;
@@ -150,6 +162,8 @@ var controller = (function(budgetCtrl, uiCtrl){
 
                 ctrlAddItem();
         });
+
+        document.querySelector(".container").addEventListener("click", ctrlDeleteItem);
     };
 
     var updateBudget = function() {
@@ -173,6 +187,24 @@ var controller = (function(budgetCtrl, uiCtrl){
         uiCtrl.clearFields();
 
         updateBudget();
+    };
+
+    var ctrlDeleteItem = function(event) {
+        var itemId = event.target.parentNode.parentNode.parentNode.parentNode.id;
+
+        if(itemId) {
+            var splitId = itemId.split("-");
+
+            var type = splitId[0];
+
+            var id = parseInt(splitId[1]);
+
+            budgetCtrl.deleteItem(type, id);
+
+            uiCtrl.deleteListItem(itemId);
+
+            updateBudget();
+        }
     };
 
     return {
