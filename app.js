@@ -138,6 +138,12 @@ var uiController = (function(){
         return sign + " " + int + "." + dec;
     };
 
+    var nodeListForEach = function(list, callback){
+        for(var i = 0; i < list.length; i ++){
+            callback(list[i], i);
+        }
+    };
+
     return {
         getInput: function(){
             var type = document.querySelector(".add__type").value;
@@ -196,16 +202,29 @@ var uiController = (function(){
         displayPercentages: function(percentages){
             var fields = document.querySelectorAll(".item__percentage");
 
-            var nodeListForEach = function(list, callback){
-                for(var i = 0; i < list.length; i ++){
-                    callback(list[i], i);
-                }
-            };
-
             nodeListForEach(fields, function(current, index){
                 current.innerHTML = percentages[index] > 0 ? percentages[index] + "%"
                     : "---";
             });
+        },
+        displayMonth: function(){
+            var now = new Date();
+
+            var year = now.getFullYear();
+            var month = now.getMonth();
+            var monthNames = ["January", "February", "March", "April", "May", "June", 
+                "July", "August", "September", "October", "November", "December"];
+
+            document.querySelector(".budget__title--month").innerHTML = monthNames[month] + " " + year;
+        },
+        changedType: function(event){
+            var fields = document.querySelectorAll(".add__type, .add__description, .add__value");
+
+            nodeListForEach(fields, function(cur){
+                cur.classList.toggle("red-focus");
+            });
+
+            document.querySelector(".add__btn").classList.toggle("red");
         }
     }
 })();
@@ -222,6 +241,8 @@ var controller = (function(budgetCtrl, uiCtrl){
         });
 
         document.querySelector(".container").addEventListener("click", ctrlDeleteItem);
+
+        document.querySelector(".add__type").addEventListener("change", uiCtrl.changedType)
     };
 
     var updateBudget = function() {
@@ -280,6 +301,7 @@ var controller = (function(budgetCtrl, uiCtrl){
     return {
         init: function() {
             console.log("Application start.");
+            uiCtrl.displayMonth();
             uiCtrl.displayBudget({
                 budget: 0,
                 totalInc: 0,
